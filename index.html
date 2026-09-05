@@ -2,21 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>The Cosmic Archive</title>
+  <title>Delta Archives History</title>
   <style>
     body {
       margin: 0;
-      overflow: hidden;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       font-family: 'Cinzel', serif;
       color: #e0e0e0;
       background: black;
     }
 
-    /* Фон */
     #background {
       position: fixed;
-      width: 100%;
-      height: 100%;
+      inset: -24px;
       background: radial-gradient(circle at center, #0a0a1a, #000);
       overflow: hidden;
       z-index: -1;
@@ -63,7 +65,6 @@
       opacity: 0.8;
     }
 
-    /* Бегущая строка */
     #news {
       background: rgba(20,20,40,0.8);
       padding: 10px;
@@ -80,7 +81,6 @@
       to { transform: translateX(-100%); }
     }
 
-    /* Меню */
     nav {
       display: flex;
       justify-content: center;
@@ -91,7 +91,7 @@
       text-decoration: none;
       color: #e0e0e0;
       padding: 10px 20px;
-      transition: 0.3s;
+      transition: border-color 0.45s ease, background-color 0.45s ease, color 0.45s ease;
       border: 1px solid transparent;
       box-sizing: border-box;
     }
@@ -101,7 +101,6 @@
       color: #fff;
     }
 
-    /* Секции */
     section {
       max-width: 800px;
       margin: 50px auto;
@@ -109,16 +108,12 @@
       opacity: 0;
       animation: fadeIn 3s forwards;
     }
+    #about {
+      margin-top: auto;
+      margin-bottom: 50px;
+    }
     @keyframes fadeIn {
       to { opacity: 1; }
-    }
-
-    /* About Us внизу */
-    #about {
-      position: relative;
-      bottom: 0;
-      margin-top: 500px;
-      padding-bottom: 50px;
     }
 
     #news,
@@ -140,28 +135,34 @@
   <nav>
     <a href="#">Главная</a>
     <a href="#">Истории</a>
-    <a href="#">Lore</a>
-    <a href="#">About Us</a>
+    <a href="#">Сюжет</a>
     <a href="#">Аккаунт</a>
   </nav>
 
   <section id="lore">
-    <h2>Lore</h2>
-    <p>Это пространство хранит все возможные истории и события. Каждая звезда — это память, каждый туман — след времени.</p>
+    <h2>Кусок истории</h2>
+    <p>Когда мир только только начал свой путь, вместе с ним появилась место... <br> 
+       Место... где каждое события, каждая измение записывалась здесь <br>
+       Наше архив всегда оставался в тени, но... время шло <br>
+       И настал момент когда... истории захотель быть услышаны... именно вами
+    </p>
   </section>
 
   <section id="about">
-    <h2>About Us</h2>
-    <p>Мы — хранители архива, собирающие истории из всех миров и эпох.</p>
+    <h2>О нас</h2>
+    <p>Каждая звезда что видна нам — это история что находится в другом мире</p>
   </section>
 
   <script>
-    // Генерация звёзд по всей ширине
+
     const bg = document.getElementById('background');
     const linesCanvas = document.getElementById('star-lines');
     const linesContext = linesCanvas.getContext('2d');
     const starsCount = 300;
     let cursorPosition = null;
+    let targetOffset = { x: 0, y: 0 };
+    let currentOffset = { x: 0, y: 0 };
+    let animationFrame;
 
     function createStars() {
       bg.innerHTML = '';
@@ -211,23 +212,28 @@
       });
     }
 
+    function animateScene() {
+      currentOffset.x += (targetOffset.x - currentOffset.x) * 0.08;
+      currentOffset.y += (targetOffset.y - currentOffset.y) * 0.08;
+      bg.style.transform = `translate(${currentOffset.x}px, ${currentOffset.y}px)`;
+      drawStarConnections();
+      animationFrame = requestAnimationFrame(animateScene);
+    }
+
     createStars();
     resizeLinesCanvas();
 
-    // Параллакс эффект
     document.addEventListener('mousemove', e => {
       cursorPosition = { x: e.clientX, y: e.clientY };
-      const x = (e.clientX / window.innerWidth - 0.5) * 20;
-      const y = (e.clientY / window.innerHeight - 0.5) * 20;
-      bg.style.transform = `translate(${x}px, ${y}px)`;
-      drawStarConnections();
+      targetOffset.x = (e.clientX / window.innerWidth - 0.5) * 20;
+      targetOffset.y = (e.clientY / window.innerHeight - 0.5) * 20;
     });
 
-    // Обновление звёзд при изменении размера окна
+    animateScene();
+
     window.addEventListener('resize', () => {
       createStars();
       resizeLinesCanvas();
-      drawStarConnections();
     });
   </script>
 </body>
