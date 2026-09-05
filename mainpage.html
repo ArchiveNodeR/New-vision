@@ -47,13 +47,41 @@
       to { transform: translate(3%, 2%) scale(1.08); }
     }
 
-    #star-lines {
+    #star-lines,
+    #comets-canvas {
       position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
       pointer-events: none;
       z-index: 0;
+    }
+
+    #comets {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .comet-explosion {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(255, 245, 190, 0.95);
+      border-radius: 50%;
+      background: rgba(255, 210, 120, 0.7);
+      box-shadow: 0 0 12px 5px rgba(255, 180, 90, 0.8);
+      transform: translate(-50%, -50%);
+      animation: cometExplosion 0.8s ease-out forwards;
+    }
+    @keyframes cometExplosion {
+      to {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(4);
+        box-shadow: 0 0 24px 12px rgba(255, 180, 90, 0);
+      }
     }
 
     .star {
@@ -63,6 +91,19 @@
       background: white;
       border-radius: 50%;
       opacity: 0.8;
+      animation: starGlow var(--glow-duration) ease-in-out var(--glow-delay) infinite;
+    }
+    @keyframes starGlow {
+      0%, 100% {
+        opacity: 0.35;
+        transform: scale(0.75);
+        box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.45);
+        box-shadow: 0 0 7px 2px rgba(220, 240, 255, 0.8);
+      }
     }
 
     #news {
@@ -127,6 +168,8 @@
 <body>
   <div id="background"></div>
   <canvas id="star-lines"></canvas>
+  <canvas id="comets-canvas"></canvas>
+  <div id="comets" aria-hidden="true"></div>
 
   <div id="news">
     <span>Архив в реконструкции, просим вас сообщить о любых ошибках или недостающих элементах. Спасибо за сотрудничество!</span>
@@ -154,15 +197,107 @@
   </section>
 
   <script>
-
     const bg = document.getElementById('background');
     const linesCanvas = document.getElementById('star-lines');
     const linesContext = linesCanvas.getContext('2d');
+    const cometsCanvas = document.getElementById('comets-canvas');
+    const cometsContext = cometsCanvas.getContext('2d');
+    const cometsLayer = document.getElementById('comets');
     const starsCount = 300;
+    const cometInterval = 8000;
+    const maxCometsPerWave = 7;
+    const activeComets = [];
+    const cometLaunchTimeouts = new Set();
+    let cometIntervalId = null;
     let cursorPosition = null;
     let targetOffset = { x: 0, y: 0 };
     let currentOffset = { x: 0, y: 0 };
     let animationFrame;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+
+    class Comet {
+      constructor(fromRight, collisionPossible) {
+        this.fromRight = fromRight;
+        this.collisionPossible = collisionPossible;
+        this.alive = true;
+
+        const startX = fromRight
+          ? W * (0.75 + Math.random() * 0.25)
+          : W * (-0.12 + Math.random() * 0.25);
+        const startY = H * (-0.18 + Math.random() * 0.38);
+
+        this.x = startX;
+        this.y = startY;
+
+        const targetX = W * (0.3 + Math.random() * 0.4);
+        const targetY = H * (0.3 + Math.random() * 0.4);
+        const angle = Math.atan2(targetY - startY, targetX - startX);
+
+        this.speed = 3 + Math.random() * 7;
+        this.vx = Math.cos(angle) * this.speed;
+        this.vy = Math.sin(angle) * this.speed;
+
+        this.radius = 1.5 + Math.random() * 2;
+        this.trail = [];
+        this.maxTrail = 30 + Math.floor(Math.random() * 30);
+
+        this.life = 0;
+        this.maxLife = 140 + Math.floor(Math.random() * 260);
+
+        this.fadeOutDuration = 50;
+      }
+
+      update() {
+        this.life++;
+        this.x += this.vx;
+        this.y += this.vy;
+
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > this.maxTrail) this.trail.shift();
+
+        const outOfScreen = this.x < -80 || this.x > W + 80 ||
+                            this.y < -80 || this.y > H + 80;
+        if (outOfScreen || this.life >= this.maxLife) {
+          this.alive = false;
+        }
+      }
+
+      draw(ctx) {
+        const remaining = this.maxLife - this.life;
+        const fade = Math.min(1, remaining / this.fadeOutDuration);
+
+        if (this.trail.length > 1) {
+          for (let i = 1; i < this.trail.length; i++) {
+            const t = i / this.trail.length;
+            const alpha = t * t * fade;
+            const lw = t * this.radius * 2.2;
+
+            ctx.beginPath();
+            ctx.moveTo(this.trail[i - 1].x, this.trail[i - 1].y);
+            ctx.lineTo(this.trail[i].x, this.trail[i].y);
+            ctx.strokeStyle = `rgba(200, 225, 255, ${alpha})`;
+            ctx.lineWidth = lw;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+          }
+        }
+
+        const glow = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius * 5);
+        glow.addColorStop(0, `rgba(255, 255, 255, ${fade})`);
+        glow.addColorStop(0.3, `rgba(180, 215, 255, ${0.65 * fade})`);
+        glow.addColorStop(1, `rgba(180, 215, 255, 0)`);
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${fade})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
     function createStars() {
       bg.innerHTML = '';
@@ -171,19 +306,28 @@
         star.className = 'star';
         star.style.top = Math.random() * window.innerHeight + 'px';
         star.style.left = Math.random() * window.innerWidth + 'px';
+        star.style.setProperty('--glow-duration', `${2.5 + Math.random() * 4}s`);
+        star.style.setProperty('--glow-delay', `${Math.random() * -6}s`);
         bg.appendChild(star);
       }
     }
 
-    function resizeLinesCanvas() {
+    function resizeCanvases() {
       const pixelRatio = window.devicePixelRatio || 1;
-      linesCanvas.width = window.innerWidth * pixelRatio;
-      linesCanvas.height = window.innerHeight * pixelRatio;
+      W = window.innerWidth;
+      H = window.innerHeight;
+
+      linesCanvas.width = W * pixelRatio;
+      linesCanvas.height = H * pixelRatio;
       linesContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+      cometsCanvas.width = W * pixelRatio;
+      cometsCanvas.height = H * pixelRatio;
+      cometsContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     }
 
     function drawStarConnections() {
-      linesContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      linesContext.clearRect(0, 0, W, H);
       if (!cursorPosition) return;
 
       const nearbyStars = [...document.querySelectorAll('.star')]
@@ -212,16 +356,100 @@
       });
     }
 
+    function drawComets() {
+      cometsContext.clearRect(0, 0, W, H);
+      for (const comet of activeComets) {
+        comet.draw(cometsContext);
+      }
+    }
+
+    function createExplosion(x, y) {
+      const explosion = document.createElement('span');
+      explosion.className = 'comet-explosion';
+      explosion.style.left = `${x}px`;
+      explosion.style.top = `${y}px`;
+      cometsLayer.appendChild(explosion);
+      explosion.addEventListener('animationend', () => explosion.remove(), { once: true });
+    }
+
+    function checkCometCollisions() {
+      for (let i = 0; i < activeComets.length; i++) {
+        const a = activeComets[i];
+        if (!a.alive || !a.collisionPossible) continue;
+        for (let j = i + 1; j < activeComets.length; j++) {
+          const b = activeComets[j];
+          if (!b.alive || !b.collisionPossible) continue;
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 14) {
+            createExplosion((a.x + b.x) / 2, (a.y + b.y) / 2);
+            a.alive = false;
+            b.alive = false;
+            return;
+          }
+        }
+      }
+    }
+
+    function launchComet(fromRight, collisionPossible) {
+      activeComets.push(new Comet(fromRight, collisionPossible));
+    }
+
+    function launchCometWave() {
+      if (document.hidden) return;
+
+      const cometCount = Math.floor(Math.random() * (maxCometsPerWave - 1)) + 2;
+      const collisionPossible = Math.random() < 0.1;
+      for (let i = 0; i < cometCount; i++) {
+        const launchTimeout = window.setTimeout(() => {
+          cometLaunchTimeouts.delete(launchTimeout);
+          launchComet(i % 2 === 1, collisionPossible);
+        }, i * 1200 + Math.random() * 700);
+        cometLaunchTimeouts.add(launchTimeout);
+      }
+    }
+
+    function clearPendingComets() {
+      cometLaunchTimeouts.forEach(timeoutId => window.clearTimeout(timeoutId));
+      cometLaunchTimeouts.clear();
+      activeComets.length = 0;
+      cometsContext.clearRect(0, 0, W, H);
+      cometsLayer.innerHTML = '';
+    }
+
+    function startCometTimer() {
+      if (cometIntervalId !== null) return;
+      cometIntervalId = window.setInterval(launchCometWave, cometInterval);
+    }
+
+    function stopCometTimer() {
+      if (cometIntervalId === null) return;
+      window.clearInterval(cometIntervalId);
+      cometIntervalId = null;
+    }
+
     function animateScene() {
       currentOffset.x += (targetOffset.x - currentOffset.x) * 0.08;
       currentOffset.y += (targetOffset.y - currentOffset.y) * 0.08;
       bg.style.transform = `translate(${currentOffset.x}px, ${currentOffset.y}px)`;
+
       drawStarConnections();
+
+      for (const comet of activeComets) {
+        comet.update();
+      }
+      checkCometCollisions();
+      for (let i = activeComets.length - 1; i >= 0; i--) {
+        if (!activeComets[i].alive) activeComets.splice(i, 1);
+      }
+      drawComets();
+
       animationFrame = requestAnimationFrame(animateScene);
     }
 
     createStars();
-    resizeLinesCanvas();
+    resizeCanvases();
 
     document.addEventListener('mousemove', e => {
       cursorPosition = { x: e.clientX, y: e.clientY };
@@ -230,10 +458,20 @@
     });
 
     animateScene();
+    startCometTimer();
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopCometTimer();
+        clearPendingComets();
+      } else {
+        startCometTimer();
+      }
+    });
 
     window.addEventListener('resize', () => {
       createStars();
-      resizeLinesCanvas();
+      resizeCanvases();
     });
   </script>
 </body>
