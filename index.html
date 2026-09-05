@@ -1,12 +1,234 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Page Title</title>
+  <meta charset="UTF-8">
+  <title>The Cosmic Archive</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Cinzel', serif;
+      color: #e0e0e0;
+      background: black;
+    }
+
+    /* Фон */
+    #background {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #0a0a1a, #000);
+      overflow: hidden;
+      z-index: -1;
+    }
+    #background::before,
+    #background::after {
+      content: '';
+      position: absolute;
+      inset: -20%;
+      pointer-events: none;
+      filter: blur(45px);
+      opacity: 0.35;
+    }
+    #background::before {
+      background: radial-gradient(ellipse at 25% 35%, rgba(72, 111, 167, 0.35), transparent 45%),
+                  radial-gradient(ellipse at 75% 65%, rgba(112, 57, 130, 0.25), transparent 48%);
+      animation: fogDrift 18s ease-in-out infinite alternate;
+    }
+    #background::after {
+      background: radial-gradient(ellipse at 60% 20%, rgba(190, 206, 220, 0.12), transparent 40%),
+                  radial-gradient(ellipse at 35% 80%, rgba(42, 96, 120, 0.2), transparent 45%);
+      animation: fogDrift 24s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes fogDrift {
+      from { transform: translate(-3%, -2%) scale(1); }
+      to { transform: translate(3%, 2%) scale(1.08); }
+    }
+
+    #star-lines {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+    }
+
+    /* Бегущая строка */
+    #news {
+      background: rgba(20,20,40,0.8);
+      padding: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    #news span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scroll 20s linear infinite;
+    }
+    @keyframes scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-100%); }
+    }
+
+    /* Меню */
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    nav a {
+      text-decoration: none;
+      color: #e0e0e0;
+      padding: 10px 20px;
+      transition: 0.3s;
+      border: 1px solid transparent;
+      box-sizing: border-box;
+    }
+    nav a:hover {
+      border: 1px solid #e0e0e0;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    /* Секции */
+    section {
+      max-width: 800px;
+      margin: 50px auto;
+      text-align: center;
+      opacity: 0;
+      animation: fadeIn 3s forwards;
+    }
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    /* About Us внизу */
+    #about {
+      position: relative;
+      bottom: 0;
+      margin-top: 500px;
+      padding-bottom: 50px;
+    }
+
+    #news,
+    nav,
+    section {
+      position: relative;
+      z-index: 1;
+    }
+  </style>
 </head>
 <body>
+  <div id="background"></div>
+  <canvas id="star-lines"></canvas>
 
-<h1>This is a Heading</h1>
-<p>This is a paragraph.</p>
+  <div id="news">
+    <span>Архив обновлён. История №47 восстановлена. — Новая запись добавлена в зал Хоррора...</span>
+  </div>
 
+  <nav>
+    <a href="#">Главная</a>
+    <a href="#">Истории</a>
+    <a href="#">Lore</a>
+    <a href="#">About Us</a>
+    <a href="#">Аккаунт</a>
+  </nav>
+
+  <section id="lore">
+    <h2>Lore</h2>
+    <p>Это пространство хранит все возможные истории и события. Каждая звезда — это память, каждый туман — след времени.</p>
+  </section>
+
+  <section id="about">
+    <h2>About Us</h2>
+    <p>Мы — хранители архива, собирающие истории из всех миров и эпох.</p>
+  </section>
+
+  <script>
+    // Генерация звёзд по всей ширине
+    const bg = document.getElementById('background');
+    const linesCanvas = document.getElementById('star-lines');
+    const linesContext = linesCanvas.getContext('2d');
+    const starsCount = 300;
+    let cursorPosition = null;
+
+    function createStars() {
+      bg.innerHTML = '';
+      for (let i = 0; i < starsCount; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.top = Math.random() * window.innerHeight + 'px';
+        star.style.left = Math.random() * window.innerWidth + 'px';
+        bg.appendChild(star);
+      }
+    }
+
+    function resizeLinesCanvas() {
+      const pixelRatio = window.devicePixelRatio || 1;
+      linesCanvas.width = window.innerWidth * pixelRatio;
+      linesCanvas.height = window.innerHeight * pixelRatio;
+      linesContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    }
+
+    function drawStarConnections() {
+      linesContext.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      if (!cursorPosition) return;
+
+      const nearbyStars = [...document.querySelectorAll('.star')]
+        .map(star => {
+          const bounds = star.getBoundingClientRect();
+          const starX = bounds.left + bounds.width / 2;
+          const starY = bounds.top + bounds.height / 2;
+          return {
+            x: starX,
+            y: starY,
+            distance: Math.hypot(starX - cursorPosition.x, starY - cursorPosition.y)
+          };
+        })
+        .filter(star => star.distance < 230)
+        .sort((first, second) => first.distance - second.distance)
+        .slice(0, 12);
+
+      nearbyStars.forEach(star => {
+        const opacity = 0.42 * (1 - star.distance / 230);
+        linesContext.beginPath();
+        linesContext.moveTo(cursorPosition.x, cursorPosition.y);
+        linesContext.lineTo(star.x, star.y);
+        linesContext.strokeStyle = `rgba(150, 205, 255, ${opacity})`;
+        linesContext.lineWidth = 1;
+        linesContext.stroke();
+      });
+    }
+
+    createStars();
+    resizeLinesCanvas();
+
+    // Параллакс эффект
+    document.addEventListener('mousemove', e => {
+      cursorPosition = { x: e.clientX, y: e.clientY };
+      const x = (e.clientX / window.innerWidth - 0.5) * 20;
+      const y = (e.clientY / window.innerHeight - 0.5) * 20;
+      bg.style.transform = `translate(${x}px, ${y}px)`;
+      drawStarConnections();
+    });
+
+    // Обновление звёзд при изменении размера окна
+    window.addEventListener('resize', () => {
+      createStars();
+      resizeLinesCanvas();
+      drawStarConnections();
+    });
+  </script>
 </body>
 </html>
