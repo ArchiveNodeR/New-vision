@@ -1,2 +1,3 @@
 # New-vision
-Trying to make a new vision site
+
+Небольшой сайт архива историй с интерактивным космическим фоном.

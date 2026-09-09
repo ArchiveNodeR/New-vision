@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Delta Archives History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+
+</head>
+<body>
+  <div id="background"></div>
+  <canvas id="star-lines"></canvas>
+  <canvas id="comets-canvas"></canvas>
+  <div id="comets" aria-hidden="true"></div>
+
+  <div id="news">
+    <div class="chronicle-badge">
+      <svg viewBox="0 0 40 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="11" r="7" stroke="#1a1a1a" stroke-width="2" fill="rgba(255,160,0,0.35)"/>
+        <circle cx="28" cy="11" r="7" stroke="#1a1a1a" stroke-width="2" fill="rgba(255,160,0,0.35)"/>
+        <path d="M19 11 Q20 9 21 11" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+        <path d="M5 9 L1 7" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+        <path d="M35 9 L39 7" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Хроника
+    </div>
+    <div class="news-scroll">
+      <span>Архив в реконструкции, просим вас сообщить о любых ошибках или недостающих элементах. Спасибо за сотрудничество!</span>
+    </div>
+  </div>
+
+  <nav>
+    <a href="#">Главная</a>
+    <a href="#">Истории</a>
+    <a href="#">Сюжет</a>
+    <a href="#">Аккаунт</a>
+  </nav>
+
+  <section id="lore">
+    <h2>Кусок истории</h2>
+    <p>Когда мир только только начал свой путь, вместе с ним появилась место... <br> 
+       Место... где каждое события, каждая измение записывалась здесь <br>
+       Наше архив всегда оставался в тени, но... время шло <br>
+       И настал момент когда... истории захотель быть услышаны... именно вами
+    </p>
+  </section>
+
+  <section id="about">
+    <h2>О нас</h2>
+    <p>Каждая звезда что видна нам — это история что находится в другом мире</p>
+  </section>
+
+  <script type="module" src="./js/main.js"></script>
+  </body>
+</html>
