@@ -75,29 +75,79 @@ class Comet {
   }
 }
 
+function destroyScene(scene) {
+  if (!scene) return;
+
+  if (scene.rafId) cancelAnimationFrame(scene.rafId);
+  if (scene.cometIntervalId) clearInterval(scene.cometIntervalId);
+  scene.cometLaunchTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+
+  scene.onResize && window.removeEventListener('resize', scene.onResize);
+  scene.onMouseMove && document.removeEventListener('mousemove', scene.onMouseMove);
+  scene.onVisibilityChange && document.removeEventListener('visibilitychange', scene.onVisibilityChange);
+
+  if (scene.background) scene.background.replaceChildren();
+  if (scene.cometsLayer) scene.cometsLayer.replaceChildren();
+
+  const context = scene.linesCanvas?.getContext('2d');
+  if (context && scene.width && scene.height) {
+    context.clearRect(0, 0, scene.width, scene.height);
+  }
+
+  const cometsContext = scene.cometsCanvas?.getContext('2d');
+  if (cometsContext && scene.width && scene.height) {
+    cometsContext.clearRect(0, 0, scene.width, scene.height);
+  }
+}
+
 export function initializeScene() {
+  if (window.__deltaArchiveScene) {
+    destroyScene(window.__deltaArchiveScene);
+  }
+
   const background = document.getElementById('background');
   const linesCanvas = document.getElementById('star-lines');
-  const linesContext = linesCanvas.getContext('2d');
   const cometsCanvas = document.getElementById('comets-canvas');
-  const cometsContext = cometsCanvas.getContext('2d');
   const cometsLayer = document.getElementById('comets');
-  const activeComets = [];
-  const cometLaunchTimeouts = new Set();
-  let cometIntervalId = null;
-  let cursorPosition = null;
-  let targetOffset = { x: 0, y: 0 };
-  let currentOffset = { x: 0, y: 0 };
-  let width = window.innerWidth;
-  let height = window.innerHeight;
+
+  if (!background || !linesCanvas || !cometsCanvas || !cometsLayer) {
+    return;
+  }
+
+  const linesContext = linesCanvas.getContext('2d');
+  const cometsContext = cometsCanvas.getContext('2d');
+  if (!linesContext || !cometsContext) {
+    return;
+  }
+
+  const scene = {
+    background,
+    linesCanvas,
+    cometsCanvas,
+    cometsLayer,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    activeComets: [],
+    cometLaunchTimeouts: new Set(),
+    cometIntervalId: null,
+    cursorPosition: null,
+    targetOffset: { x: 0, y: 0 },
+    currentOffset: { x: 0, y: 0 },
+    rafId: null,
+    onResize: null,
+    onMouseMove: null,
+    onVisibilityChange: null,
+  };
+
+  window.__deltaArchiveScene = scene;
 
   function createStars() {
     background.replaceChildren();
     for (let index = 0; index < STARS_COUNT; index++) {
       const star = document.createElement('div');
       star.className = 'star';
-      star.style.top = `${Math.random() * window.innerHeight}px`;
-      star.style.left = `${Math.random() * window.innerWidth}px`;
+      star.style.top = `${Math.random() * scene.height}px`;
+      star.style.left = `${Math.random() * scene.width}px`;
       star.style.setProperty('--glow-duration', `${2.5 + Math.random() * 4}s`);
       star.style.setProperty('--glow-delay', `${Math.random() * -6}s`);
       background.appendChild(star);
@@ -106,26 +156,26 @@ export function initializeScene() {
 
   function resizeCanvases() {
     const pixelRatio = window.devicePixelRatio || 1;
-    width = window.innerWidth;
-    height = window.innerHeight;
-    linesCanvas.width = width * pixelRatio;
-    linesCanvas.height = height * pixelRatio;
+    scene.width = window.innerWidth;
+    scene.height = window.innerHeight;
+    linesCanvas.width = scene.width * pixelRatio;
+    linesCanvas.height = scene.height * pixelRatio;
     linesContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    cometsCanvas.width = width * pixelRatio;
-    cometsCanvas.height = height * pixelRatio;
+    cometsCanvas.width = scene.width * pixelRatio;
+    cometsCanvas.height = scene.height * pixelRatio;
     cometsContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
   }
 
   function drawStarConnections() {
-    linesContext.clearRect(0, 0, width, height);
-    if (!cursorPosition) return;
+    linesContext.clearRect(0, 0, scene.width, scene.height);
+    if (!scene.cursorPosition) return;
 
     const nearbyStars = [...document.querySelectorAll('.star')]
       .map(star => {
         const bounds = star.getBoundingClientRect();
         const x = bounds.left + bounds.width / 2;
         const y = bounds.top + bounds.height / 2;
-        return { x, y, distance: Math.hypot(x - cursorPosition.x, y - cursorPosition.y) };
+        return { x, y, distance: Math.hypot(x - scene.cursorPosition.x, y - scene.cursorPosition.y) };
       })
       .filter(star => star.distance < 230)
       .sort((first, second) => first.distance - second.distance)
@@ -134,7 +184,7 @@ export function initializeScene() {
     nearbyStars.forEach(star => {
       const opacity = 0.42 * (1 - star.distance / 230);
       linesContext.beginPath();
-      linesContext.moveTo(cursorPosition.x, cursorPosition.y);
+      linesContext.moveTo(scene.cursorPosition.x, scene.cursorPosition.y);
       linesContext.lineTo(star.x, star.y);
       linesContext.strokeStyle = `rgba(150, 205, 255, ${opacity})`;
       linesContext.lineWidth = 1;
@@ -152,11 +202,11 @@ export function initializeScene() {
   }
 
   function checkCometCollisions() {
-    for (let firstIndex = 0; firstIndex < activeComets.length; firstIndex++) {
-      const first = activeComets[firstIndex];
+    for (let firstIndex = 0; firstIndex < scene.activeComets.length; firstIndex++) {
+      const first = scene.activeComets[firstIndex];
       if (!first.alive || !first.collisionPossible) continue;
-      for (let secondIndex = firstIndex + 1; secondIndex < activeComets.length; secondIndex++) {
-        const second = activeComets[secondIndex];
+      for (let secondIndex = firstIndex + 1; secondIndex < scene.activeComets.length; secondIndex++) {
+        const second = scene.activeComets[secondIndex];
         if (!second.alive || !second.collisionPossible) continue;
         if (Math.hypot(first.x - second.x, first.y - second.y) < 14) {
           createExplosion((first.x + second.x) / 2, (first.y + second.y) / 2);
@@ -174,57 +224,63 @@ export function initializeScene() {
     const collisionPossible = Math.random() < 0.1;
     for (let index = 0; index < cometCount; index++) {
       const launchTimeout = window.setTimeout(() => {
-        cometLaunchTimeouts.delete(launchTimeout);
-        activeComets.push(new Comet(width, height, index % 2 === 1, collisionPossible));
+        scene.cometLaunchTimeouts.delete(launchTimeout);
+        scene.activeComets.push(new Comet(scene.width, scene.height, index % 2 === 1, collisionPossible));
       }, index * 1200 + Math.random() * 700);
-      cometLaunchTimeouts.add(launchTimeout);
+      scene.cometLaunchTimeouts.add(launchTimeout);
     }
   }
 
   function clearPendingComets() {
-    cometLaunchTimeouts.forEach(timeoutId => window.clearTimeout(timeoutId));
-    cometLaunchTimeouts.clear();
-    activeComets.length = 0;
-    cometsContext.clearRect(0, 0, width, height);
+    scene.cometLaunchTimeouts.forEach(timeoutId => window.clearTimeout(timeoutId));
+    scene.cometLaunchTimeouts.clear();
+    scene.activeComets.length = 0;
+    cometsContext.clearRect(0, 0, scene.width, scene.height);
     cometsLayer.replaceChildren();
   }
 
   function animateScene() {
-    currentOffset.x += (targetOffset.x - currentOffset.x) * 0.08;
-    currentOffset.y += (targetOffset.y - currentOffset.y) * 0.08;
-    background.style.transform = `translate(${currentOffset.x}px, ${currentOffset.y}px)`;
+    scene.currentOffset.x += (scene.targetOffset.x - scene.currentOffset.x) * 0.08;
+    scene.currentOffset.y += (scene.targetOffset.y - scene.currentOffset.y) * 0.08;
+    background.style.transform = `translate(${scene.currentOffset.x}px, ${scene.currentOffset.y}px)`;
     drawStarConnections();
-    activeComets.forEach(comet => comet.update(width, height));
+    scene.activeComets.forEach(comet => comet.update(scene.width, scene.height));
     checkCometCollisions();
-    for (let index = activeComets.length - 1; index >= 0; index--) {
-      if (!activeComets[index].alive) activeComets.splice(index, 1);
+    for (let index = scene.activeComets.length - 1; index >= 0; index--) {
+      if (!scene.activeComets[index].alive) scene.activeComets.splice(index, 1);
     }
-    cometsContext.clearRect(0, 0, width, height);
-    activeComets.forEach(comet => comet.draw(cometsContext));
-    requestAnimationFrame(animateScene);
+    cometsContext.clearRect(0, 0, scene.width, scene.height);
+    scene.activeComets.forEach(comet => comet.draw(cometsContext));
+    scene.rafId = requestAnimationFrame(animateScene);
   }
+
+  scene.onMouseMove = (event) => {
+    scene.cursorPosition = { x: event.clientX, y: event.clientY };
+    scene.targetOffset.x = (event.clientX / window.innerWidth - 0.5) * 20;
+    scene.targetOffset.y = (event.clientY / window.innerHeight - 0.5) * 20;
+  };
+
+  scene.onVisibilityChange = () => {
+    if (document.hidden) {
+      window.clearInterval(scene.cometIntervalId);
+      scene.cometIntervalId = null;
+      clearPendingComets();
+    } else if (scene.cometIntervalId === null) {
+      scene.cometIntervalId = window.setInterval(launchCometWave, COMET_INTERVAL);
+    }
+  };
+
+  scene.onResize = () => {
+    createStars();
+    resizeCanvases();
+  };
 
   createStars();
   resizeCanvases();
   animateScene();
-  cometIntervalId = window.setInterval(launchCometWave, COMET_INTERVAL);
+  scene.cometIntervalId = window.setInterval(launchCometWave, COMET_INTERVAL);
 
-  document.addEventListener('mousemove', event => {
-    cursorPosition = { x: event.clientX, y: event.clientY };
-    targetOffset.x = (event.clientX / window.innerWidth - 0.5) * 20;
-    targetOffset.y = (event.clientY / window.innerHeight - 0.5) * 20;
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      window.clearInterval(cometIntervalId);
-      cometIntervalId = null;
-      clearPendingComets();
-    } else if (cometIntervalId === null) {
-      cometIntervalId = window.setInterval(launchCometWave, COMET_INTERVAL);
-    }
-  });
-  window.addEventListener('resize', () => {
-    createStars();
-    resizeCanvases();
-  });
+  document.addEventListener('mousemove', scene.onMouseMove);
+  document.addEventListener('visibilitychange', scene.onVisibilityChange);
+  window.addEventListener('resize', scene.onResize);
 }

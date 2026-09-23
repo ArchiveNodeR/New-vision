@@ -2,8 +2,9 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Delta Archives History</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delta Archives — Архив историй</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
 
 </head>
@@ -29,27 +30,77 @@
     </div>
   </div>
 
-  <nav>
-    <a href="#">Главная</a>
-    <a href="#">Истории</a>
-    <a href="#">Сюжет</a>
-    <a href="#">Аккаунт</a>
-  </nav>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand">Delta Archives</div>
+      <nav>
+        <a href="./index.html">Главная</a>
+        <a href="#stories">Истории</a>
+        <a href="#plot">Сюжет</a>
+        <a href="#about">Обо мне</a>
+      </nav>
+    </header>
 
-  <section id="lore">
-    <h2>Кусок истории</h2>
-    <p>Когда мир только только начал свой путь, вместе с ним появилась место... <br> 
-       Место... где каждое события, каждая измение записывалась здесь <br>
-       Наше архив всегда оставался в тени, но... время шло <br>
-       И настал момент когда... истории захотель быть услышаны... именно вами
-    </p>
-  </section>
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Архив историй</p>
+          <h1>Там, где каждая история хранит своё собственное небо.</h1>
+          <p class="lead">
+            Я собираю рассказы о памяти, одиночестве, странствиях и том, как человек
+            находит свет даже в самых дальних местах.
+          </p>
+          <div class="actions">
+            <a class="primary-btn" href="#stories">Читать истории</a>
+            <a class="secondary-btn" href="#about">О проекте</a>
+          </div>
+        </div>
 
-  <section id="about">
-    <h2>О нас</h2>
-    <p>Каждая звезда что видна нам — это история что находится в другом мире</p>
-  </section>
+        <aside class="hero-card">
+          <p class="small-label">Последняя запись</p>
+          <h3>Ветер между окнами</h3>
+          <p>
+            История о человеке, который научился слушать тишину, чтобы услышать голос
+            прошлого.
+          </p>
+        </aside>
+      </section>
+
+      <section id="stories" class="stories">
+        <div class="section-heading">
+          <p class="eyebrow">Избранные рассказы</p>
+          <h2>Истории, что не всегда хотят быть услышанными.</h2>
+        </div>
+
+        <div id="story-grid" class="story-grid"></div>
+      </section>
+
+      <section id="plot" class="about">
+        <div class="about-text">
+          <p class="eyebrow">Сюжет</p>
+          <h2>Архив не просто хранит рассказы — он хранит атмосферу.</h2>
+          <p>
+            Здесь нет случайных записей. Каждая история — это отдельный фрагмент мира: лес, который помнит шёпот,
+            озеро, которое не отпускает тех, кто слишком долго слушал его, и тропа, где тишина уже давно стала
+            частью маршрута. Сюжет проекта строится вокруг ощущения, что реальность и легенда всегда рядом.
+          </p>
+        </div>
+      </section>
+
+      <section id="about" class="about">
+        <div class="about-text">
+          <p class="eyebrow">О проекте</p>
+          <h2>Этот сайт — не просто архив. Это пространство для живых историй.</h2>
+          <p>
+            Здесь я публикую небольшие рассказы, мысли, фрагменты чувств и сюжеты, которые не
+            всегда помещаются в одну обычную жизнь. Каждый материал — словно кусочек ночного неба:
+            отдельный, но связанный с остальным миром.
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="./js/main.js"></script>
-  </body>
+</body>
 </html>
