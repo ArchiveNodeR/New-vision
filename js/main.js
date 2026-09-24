@@ -83,6 +83,12 @@ function renderParagraphs(story) {
 
 initializeScene();
 
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    initializeScene();
+  }
+});
+
 const storyGrid = document.getElementById('story-grid');
 const articleContainer = document.getElementById('article-container');
 
@@ -109,7 +115,8 @@ if (storyGrid) {
 
 if (articleContainer) {
   const params = new URLSearchParams(window.location.search);
-  const storyId = params.get('story') || stories[0]?.id;
+  const firstStory = stories[0];
+  const storyId = params.get('story') || (firstStory && firstStory.id);
   const selectedStory = stories.find((story) => story.id === storyId) || stories[0];
 
   if (selectedStory) {

@@ -2,6 +2,12 @@ const STARS_COUNT = 300;
 const COMET_INTERVAL = 8000;
 const MAX_COMETS_PER_WAVE = 7;
 
+function clearElement(element) {
+  while (element.firstChild) {
+    element.removeChild(element.firstChild);
+  }
+}
+
 class Comet {
   constructor(width, height, fromRight, collisionPossible) {
     this.collisionPossible = collisionPossible;
@@ -86,15 +92,15 @@ function destroyScene(scene) {
   scene.onMouseMove && document.removeEventListener('mousemove', scene.onMouseMove);
   scene.onVisibilityChange && document.removeEventListener('visibilitychange', scene.onVisibilityChange);
 
-  if (scene.background) scene.background.replaceChildren();
-  if (scene.cometsLayer) scene.cometsLayer.replaceChildren();
+  if (scene.background) clearElement(scene.background);
+  if (scene.cometsLayer) clearElement(scene.cometsLayer);
 
-  const context = scene.linesCanvas?.getContext('2d');
+  const context = scene.linesCanvas && scene.linesCanvas.getContext('2d');
   if (context && scene.width && scene.height) {
     context.clearRect(0, 0, scene.width, scene.height);
   }
 
-  const cometsContext = scene.cometsCanvas?.getContext('2d');
+  const cometsContext = scene.cometsCanvas && scene.cometsCanvas.getContext('2d');
   if (cometsContext && scene.width && scene.height) {
     cometsContext.clearRect(0, 0, scene.width, scene.height);
   }
@@ -142,7 +148,7 @@ export function initializeScene() {
   window.__deltaArchiveScene = scene;
 
   function createStars() {
-    background.replaceChildren();
+    clearElement(background);
     for (let index = 0; index < STARS_COUNT; index++) {
       const star = document.createElement('div');
       star.className = 'star';
@@ -236,7 +242,7 @@ export function initializeScene() {
     scene.cometLaunchTimeouts.clear();
     scene.activeComets.length = 0;
     cometsContext.clearRect(0, 0, scene.width, scene.height);
-    cometsLayer.replaceChildren();
+    clearElement(cometsLayer);
   }
 
   function animateScene() {

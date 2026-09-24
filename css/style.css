@@ -12,9 +12,16 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  isolation: isolate;
   font-family: 'Lora', Georgia, serif;
   color: #e0e0e0;
   background: var(--bg-base);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 #background {
@@ -26,7 +33,8 @@ body {
     radial-gradient(circle at 55% 85%, var(--bg-accent-three), transparent 28%),
     var(--bg-base);
   overflow: hidden;
-  z-index: -1;
+  z-index: 0;
+  pointer-events: none;
   transition: background 0.6s ease;
 }
 
@@ -101,7 +109,8 @@ body {
   position: absolute;
   width: 2px;
   height: 2px;
-  background: white;
+  background-color: #ffffff;
+  color: #ffffff;
   border-radius: 50%;
   opacity: 0.8;
   animation: starGlow var(--glow-duration) ease-in-out var(--glow-delay) infinite;
@@ -249,11 +258,13 @@ section {
 .hero-copy h1 {
   margin: 0;
   font-family: 'Cinzel', serif;
+  font-size: 4rem;
   font-size: clamp(2.9rem, 5vw, 5rem);
   line-height: 1.02;
   letter-spacing: -0.05em;
   color: #f4efe8;
   max-width: 700px;
+  overflow-wrap: anywhere;
 }
 
 .lead {
@@ -307,6 +318,7 @@ section {
   background: rgba(12, 15, 24, 0.62);
   border: 1px solid var(--panel-border);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -337,6 +349,7 @@ section {
 .about-text h2 {
   margin: 0;
   font-family: 'Cinzel', serif;
+  font-size: 2.6rem;
   font-size: clamp(2rem, 3vw, 3rem);
   line-height: 1.2;
   color: #f4efe8;
@@ -372,6 +385,7 @@ section {
   color: #f4efe8;
   font-family: 'Cinzel', serif;
   font-size: 1.5rem;
+  overflow-wrap: anywhere;
 }
 
 .story-card p {
@@ -436,10 +450,12 @@ section {
 .article h1 {
   margin: 0;
   font-family: 'Cinzel', serif;
+  font-size: 3.2rem;
   font-size: clamp(2.5rem, 4vw, 4rem);
   line-height: 1.08;
   letter-spacing: -0.04em;
   color: #f4efe8;
+  overflow-wrap: anywhere;
 }
 
 .article-meta {
@@ -473,6 +489,7 @@ section {
   line-height: 1.95;
   color: rgba(239, 237, 231, 0.9);
   letter-spacing: 0;
+  overflow-wrap: break-word;
   text-wrap: pretty;
   text-rendering: optimizeLegibility;
 }
@@ -513,6 +530,7 @@ section {
   border-bottom: 1px solid rgba(217, 181, 113, 0.2);
   color: #f4efe8;
   font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
   font-size: clamp(1.25rem, 2.5vw, 1.65rem);
   line-height: 1.35;
   letter-spacing: 0;
@@ -610,10 +628,26 @@ section,
   z-index: 1;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1024px) {
+  .page-shell {
+    width: min(100% - 40px, 920px);
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 1.2fr) minmax(250px, 0.8fr);
+    gap: 24px;
+  }
+
+  .story-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
   .hero {
     grid-template-columns: 1fr;
     min-height: auto;
+    padding-top: 20px;
   }
 
   .story-grid {
@@ -622,7 +656,21 @@ section,
 
   .topbar {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  nav {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  nav a {
+    padding: 8px 12px;
+  }
+
+  section {
+    margin-top: 44px;
   }
 }
 
@@ -632,7 +680,63 @@ section,
   }
 
   nav {
-    justify-content: flex-start;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  nav a {
+    text-align: center;
+  }
+
+  #news {
+    padding: 8px;
+  }
+
+  .chronicle-badge {
+    margin-right: 8px;
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+
+  .news-scroll {
+    font-size: 0.78rem;
+  }
+
+  .brand {
+    font-size: 1.1rem;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(2.35rem, 12vw, 3.4rem);
+  }
+
+  .lead {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+
+  .hero-card,
+  .story-card,
+  .about-text {
+    padding: 22px 18px;
+    border-radius: 16px;
+  }
+
+  .story-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .hero-copy h1 {
@@ -641,8 +745,18 @@ section,
 
   .article {
     margin-top: 28px;
-    padding: 30px 20px 44px;
+    padding: 26px 16px 38px;
     border-radius: 20px;
+  }
+
+  .article h1 {
+    font-size: clamp(2.1rem, 11vw, 3rem);
+  }
+
+  .article-illustration {
+    height: 180px;
+    margin-block: 24px;
+    border-radius: 16px;
   }
 
   .article-body {
@@ -652,5 +766,11 @@ section,
 
   .article-body p {
     margin-bottom: 1.4rem;
+  }
+
+  .dossier-item,
+  .dossier-dialogue,
+  .dossier-quote {
+    padding-inline: 0.75rem;
   }
 }
