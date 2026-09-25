@@ -57,7 +57,7 @@ delta-archives/
 | FR-03 | Chronicle ticker                     | ✓      |
 | FR-04 | Story grid from JS array             | ✓      |
 | FR-05 | Category/tag filter                  | ✓      |
-| FR-06 | Text search                         | ✓      |
+| FR-06 | Text search                          | ✓      |
 | FR-07 | No-results state                     | ✓      |
 | FR-08 | Story detail via id param            | ✓      |
 | FR-09 | Site-wide canvas background          | ✓      |
