@@ -3,33 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#02050a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Серый свет в пустом доме — Delta Archives</title>
+  <meta name="theme-color" content="#0B0D14">
+  <title>История — Delta Archives</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body class="article-page">
-  <div id="background"></div>
-  <canvas id="star-lines"></canvas>
-  <canvas id="comets-canvas"></canvas>
+  <div id="background" aria-hidden="true"></div>
+  <canvas id="star-lines" aria-hidden="true"></canvas>
+  <canvas id="comets-canvas" aria-hidden="true"></canvas>
   <div id="comets" aria-hidden="true"></div>
 
   <div class="page-shell">
     <header class="topbar">
-      <div class="brand">Delta Archives</div>
-      <nav>
+      <a href="./index.html" class="brand">Delta Archives</a>
+      <button class="burger" id="burger-btn" aria-label="Открыть меню" aria-expanded="false" aria-controls="primary-nav">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="primary-nav" class="primary-nav">
         <a href="./index.html">Главная</a>
         <a href="./index.html#stories">Истории</a>
         <a href="./index.html#plot">Сюжет</a>
         <a href="./index.html#about">Обо мне</a>
+        <a href="./account.html">Аккаунт</a>
       </nav>
     </header>
 
     <main class="article">
       <div id="article-container"></div>
     </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">Delta Archives</div>
+        <nav class="footer-nav" aria-label="Подвал">
+          <a href="./index.html">Главная</a>
+          <a href="./index.html#stories">Истории</a>
+          <a href="./index.html#plot">Сюжет</a>
+          <a href="./index.html#about">Обо мне</a>
+          <a href="./account.html">Аккаунт</a>
+        </nav>
+        <p class="footer-copy">&copy; 2026 Delta Archives. Все права защищены.</p>
+      </div>
+    </footer>
   </div>
 
   <script type="module" src="./js/main.js"></script>
